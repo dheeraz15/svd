@@ -6,7 +6,11 @@ SECRET_KEY = 'django-svd-demo-secret-key-not-for-production'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'svd.dhirajchapagain.com.np',
+    'localhost',
+    '127.0.0.1',
+]
 
 INSTALLED_APPS = [
     'django.contrib.staticfiles',
