@@ -18,28 +18,12 @@
       padding: 48px 40px 32px;
       border-bottom: 1px solid #1e2330;
     }
-
-    header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    header p {
-      margin-top: 8px;
-      color: #94a3b8;
-      font-size: 1rem;
-    }
-
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p { margin-top: 8px; color: #94a3b8; }
     .badge {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 4px 10px;
-      background: #1e3a5f;
-      color: #60a5fa;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-family: monospace;
+      display: inline-block; margin-top: 12px;
+      padding: 4px 10px; background: #1e3a5f; color: #60a5fa;
+      border-radius: 4px; font-size: 0.75rem; font-family: monospace;
     }
 
     .gallery {
@@ -49,99 +33,92 @@
       padding: 40px;
     }
 
-    .card {
+    /* ── Upload card ── */
+    .upload-card {
       background: #161b27;
-      border: 1px solid #1e2330;
+      border: 2px dashed #2d3748;
       border-radius: 12px;
       overflow: hidden;
       transition: border-color 0.2s;
     }
+    .upload-card.drag-over { border-color: #3b82f6; background: #12203a; }
 
+    .upload-zone {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 20px; gap: 10px;
+      cursor: pointer; text-align: center;
+      min-height: 220px;
+    }
+    .upload-icon {
+      font-size: 2.5rem; color: #3b82f6;
+      background: #1e3a5f; width: 64px; height: 64px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .upload-zone h2 { font-size: 1rem; font-weight: 600; margin-top: 4px; }
+    .upload-zone p { font-size: 0.82rem; color: #64748b; }
+
+    .upload-btn {
+      margin-top: 4px; padding: 8px 20px;
+      background: #2563eb; color: #fff;
+      border: none; border-radius: 6px;
+      font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .upload-btn:hover { background: #1d4ed8; }
+
+    /* progress state */
+    .upload-progress {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px; gap: 14px; min-height: 220px;
+    }
+    .prog-track {
+      width: 100%; height: 6px;
+      background: #1e2330; border-radius: 3px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; width: 0%; background: #3b82f6;
+      border-radius: 3px; transition: width 0.1s;
+    }
+    .prog-label { font-size: 0.82rem; color: #94a3b8; }
+    .prog-error { font-size: 0.82rem; color: #f87171; }
+
+    .upload-card-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #1e2330;
+      font-size: 0.78rem; color: #4b5563;
+    }
+
+    /* ── Library cards ── */
+    .card {
+      background: #161b27; border: 1px solid #1e2330;
+      border-radius: 12px; overflow: hidden; transition: border-color 0.2s;
+    }
     .card:hover { border-color: #3b82f6; }
 
     .card-thumb {
-      width: 100%;
-      aspect-ratio: 4/3;
-      background: #0d1018;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #4b5563;
-      font-size: 0.85rem;
-      overflow: hidden;
+      width: 100%; aspect-ratio: 4/3; background: #0d1018;
+      display: flex; align-items: center; justify-content: center;
+      color: #4b5563; font-size: 0.85rem; overflow: hidden;
     }
-
-    .card-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
     .card-body { padding: 18px 20px 20px; }
+    .category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; font-weight: 600; }
+    .card-body h2 { margin-top: 6px; font-size: 1.05rem; font-weight: 600; }
+    .card-body p { margin-top: 6px; font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
 
-    .category {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #60a5fa;
-      font-weight: 600;
-    }
-
-    .card-body h2 {
-      margin-top: 6px;
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-
-    .card-body p {
-      margin-top: 6px;
-      font-size: 0.82rem;
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-    }
-
-    .filesize {
-      font-size: 0.78rem;
-      color: #64748b;
-      font-family: monospace;
-    }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+    .filesize { font-size: 0.78rem; color: #64748b; font-family: monospace; }
 
     .btn {
-      display: inline-block;
-      padding: 7px 16px;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 0.82rem;
-      font-weight: 500;
-      transition: background 0.15s;
+      display: inline-block; padding: 7px 16px;
+      background: #2563eb; color: #fff; border-radius: 6px;
+      text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: background 0.15s;
     }
-
     .btn:hover { background: #1d4ed8; }
-
-    .unavailable {
-      font-size: 0.78rem;
-      color: #f59e0b;
-    }
-
-    .downloading-note {
-      background: #1e2a1a;
-      border: 1px solid #2d4a20;
-      border-radius: 8px;
-      margin: 0 40px 0;
-      padding: 14px 20px;
-      font-size: 0.85rem;
-      color: #86efac;
-    }
   </style>
 </head>
 <body>
@@ -152,13 +129,28 @@
     <span class="badge">numpy.linalg.svd &nbsp;·&nbsp; OpenCV &nbsp;·&nbsp; Django</span>
   </header>
 
-  {% if not images.0.available %}
-  <p class="downloading-note">
-    Images are downloading in the background — refresh in a moment if thumbnails are missing.
-  </p>
-  {% endif %}
-
   <div class="gallery">
+
+    <!-- ── Upload card ── -->
+    <div class="upload-card" id="upload-card">
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">↑</div>
+        <h2>Upload Your Image</h2>
+        <p>Drop any image here, or click to browse</p>
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+        <input type="file" id="file-input" accept="image/*" style="display:none">
+      </div>
+
+      <div class="upload-progress" id="upload-progress">
+        <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+        <span class="prog-label" id="prog-label">Uploading…</span>
+        <span class="prog-error" id="prog-error" style="display:none"></span>
+      </div>
+
+      <div class="upload-card-footer">JPG, PNG, BMP, TIFF, WebP &nbsp;·&nbsp; max 200 MB</div>
+    </div>
+
+    <!-- ── Library image cards ── -->
     {% for img in images %}
     <div class="card">
       <div class="card-thumb">
@@ -177,13 +169,88 @@
             <span class="filesize">{{ img.file_size_mb }} MB</span>
             <a href="/viewer/?image_id={{ img.id }}&quality=50" class="btn">Explore SVD →</a>
           {% else %}
-            <span class="unavailable">⏳ Downloading…</span>
+            <span style="color:#f59e0b; font-size:0.78rem;">⏳ Not available</span>
           {% endif %}
         </div>
       </div>
     </div>
     {% endfor %}
+
   </div>
+
+  <script>
+    const card     = document.getElementById("upload-card");
+    const zone     = document.getElementById("upload-zone");
+    const progress = document.getElementById("upload-progress");
+    const fill     = document.getElementById("prog-fill");
+    const label    = document.getElementById("prog-label");
+    const errEl    = document.getElementById("prog-error");
+    const input    = document.getElementById("file-input");
+
+    // Drag-and-drop on the whole card
+    card.addEventListener("dragover",  e => { e.preventDefault(); card.classList.add("drag-over"); });
+    card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
+    card.addEventListener("drop", e => {
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    input.addEventListener("change", () => handleFile(input.files[0]));
+
+    function showError(msg) {
+      label.style.display = "none";
+      errEl.textContent = msg;
+      errEl.style.display = "block";
+      // Reset back to zone after 3 s
+      setTimeout(() => {
+        zone.style.display = "flex";
+        progress.style.display = "none";
+        fill.style.width = "0%";
+        label.style.display = "block";
+        errEl.style.display = "none";
+        input.value = "";
+      }, 3000);
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+
+      zone.style.display = "none";
+      progress.style.display = "flex";
+      fill.style.width = "0%";
+      label.textContent = "Uploading…";
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 100);
+          fill.style.width = pct + "%";
+          label.textContent = `Uploading… ${pct}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+          label.textContent = "Processing image…";
+          fill.style.width = "100%";
+          window.location.href = `/viewer/?image_id=${data.image_id}&quality=50`;
+        } else {
+          showError("Upload failed: " + (data.error || "unknown error"));
+        }
+      };
+
+      xhr.onerror = () => showError("Network error — check your connection.");
+
+      xhr.open("POST", "/upload/");
+      xhr.send(formData);
+    }
+  </script>
 
 </body>
 </html>
