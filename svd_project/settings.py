@@ -41,6 +41,7 @@ WSGI_APPLICATION = 'svd_project.wsgi.application'
 DATABASES = {}
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
