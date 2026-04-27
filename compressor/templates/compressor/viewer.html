@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ meta.name }} — SVD Compression</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 32px;
+      border-bottom: 1px solid #1e2330;
+    }
+    .topbar a { color: #60a5fa; text-decoration: none; font-size: 0.85rem; }
+    .topbar a:hover { text-decoration: underline; }
+    .topbar h1 { font-size: 1rem; font-weight: 600; }
+    .topbar .category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; }
+
+    /* ── Image switcher ── */
+    .switcher {
+      display: flex; gap: 8px; padding: 10px 32px;
+      border-bottom: 1px solid #1e2330;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .switcher a {
+      flex-shrink: 0; padding: 5px 14px; border-radius: 999px;
+      font-size: 0.78rem; text-decoration: none;
+      background: #1e2330; color: #94a3b8; border: 1px solid transparent; transition: all 0.15s;
+    }
+    .switcher a:hover { border-color: #3b82f6; color: #e2e8f0; }
+    .switcher a.active { background: #1e3a5f; border-color: #3b82f6; color: #60a5fa; }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex; align-items: center; gap: 28px;
+      padding: 18px 32px; background: #12151e;
+      border-bottom: 1px solid #1e2330; flex-wrap: wrap;
+    }
+    .ctrl-group { display: flex; flex-direction: column; gap: 4px; }
+    .ctrl-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; }
+
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    input[type="range"] {
+      -webkit-appearance: none; width: 300px; height: 4px;
+      background: #1e2330; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      border-radius: 50%; background: #3b82f6; cursor: pointer;
+    }
+    .quality-num {
+      font-size: 1.5rem; font-weight: 700; font-family: monospace;
+      color: #60a5fa; min-width: 52px;
+    }
+    .k-badge {
+      font-family: monospace; font-size: 0.88rem; color: #94a3b8;
+    }
+
+    /* ── Stats ── */
+    .stats-bar {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid #1e2330;
+    }
+    .stats-panel { padding: 14px 32px; border-right: 1px solid #1e2330; }
+    .stats-panel:last-child { border-right: none; }
+    .stats-head {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #64748b; margin-bottom: 10px;
+    }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 5px 20px; }
+    dt { color: #64748b; font-size: 0.8rem; }
+    dd { font-family: monospace; font-size: 0.8rem; color: #e2e8f0; }
+    dd.green { color: #34d399; }
+    dd.yellow { color: #fbbf24; }
+    dd.loading { color: #4b5563; }
+
+    /* ── Comparison images ── */
+    .comparison {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid #1e2330;
+    }
+    .img-panel {
+      position: relative; background: #0a0c12;
+      border-right: 1px solid #1e2330;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; min-height: 360px;
+    }
+    .img-panel:last-child { border-right: none; }
+    .panel-label {
+      position: absolute; top: 10px; left: 10px;
+      padding: 3px 9px; background: rgba(0,0,0,0.65);
+      border-radius: 4px; font-size: 0.7rem; color: #94a3b8;
+      backdrop-filter: blur(4px); z-index: 2;
+    }
+    .img-panel img { max-width: 100%; max-height: 60vh; object-fit: contain; display: block; }
+    .spinner-wrap {
+      position: absolute; inset: 0; background: rgba(10,12,18,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    }
+    .spinner-wrap.on { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 30px; height: 30px; border: 3px solid #1e2330;
+      border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Animation section ── */
+    .anim-toggle-bar {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 32px; border-bottom: 1px solid #1e2330;
+      background: #0f1117;
+    }
+    .btn-play {
+      padding: 8px 20px; background: #1e3a5f; border: 1px solid #3b82f6;
+      color: #60a5fa; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      font-weight: 500; transition: background 0.15s; font-family: inherit;
+    }
+    .btn-play:hover { background: #2563eb; color: #fff; }
+    .btn-stop {
+      padding: 8px 16px; background: #2d1f1f; border: 1px solid #7f1d1d;
+      color: #f87171; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      font-family: inherit; transition: background 0.15s;
+    }
+    .btn-stop:hover { background: #7f1d1d; color: #fff; }
+    .anim-hint { font-size: 0.78rem; color: #4b5563; }
+
+    .anim-section {
+      display: none; border-bottom: 1px solid #1e2330;
+    }
+    .anim-section.open { display: block; }
+
+    .anim-meta {
+      display: flex; gap: 24px; align-items: center;
+      padding: 12px 32px; background: #12151e; border-bottom: 1px solid #1e2330;
+      flex-wrap: wrap;
+    }
+    .anim-stat { display: flex; flex-direction: column; gap: 2px; }
+    .anim-stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #4b5563; }
+    .anim-stat-val { font-family: monospace; font-size: 0.9rem; color: #e2e8f0; }
+    .anim-stat-val.blue { color: #60a5fa; }
+    .anim-stat-val.green { color: #34d399; }
+
+    .anim-progress-track {
+      height: 4px; background: #1e2330; position: relative;
+    }
+    .anim-progress-fill {
+      height: 100%; background: #3b82f6; width: 0%; transition: width 0.2s;
+    }
+
+    .anim-display {
+      display: flex; align-items: center; justify-content: center;
+      background: #0a0c12; padding: 24px; min-height: 400px;
+    }
+    .anim-display img {
+      max-width: 100%; max-height: 70vh; object-fit: contain;
+      border: 1px solid #1e2330; border-radius: 4px;
+    }
+
+    /* ── Footer note ── */
+    .note {
+      padding: 14px 32px; font-size: 0.76rem; color: #374151;
+      border-top: 1px solid #1e2330;
+    }
+    .note code { color: #64748b; background: #1e2330; padding: 1px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="/">← Gallery</a>
+    <div>
+      <div class="category">{{ meta.category }}</div>
+      <h1>{{ meta.name }}</h1>
+    </div>
+  </div>
+
+  <!-- Image switcher -->
+  <div class="switcher">
+    {% for img in all_images %}
+      <a href="/viewer/?image_id={{ img.id }}&quality={{ quality }}"
+         class="{% if img.id == meta.id %}active{% endif %}">{{ img.name }}</a>
+    {% endfor %}
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Quality</span>
+      <div class="slider-row">
+        <span class="quality-num" id="quality-num">{{ quality }}%</span>
+        <input type="range" id="slider" min="1" max="100" value="{{ quality }}">
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Singular values (k)</span>
+      <span class="k-badge" id="k-badge">k = {{ k }} / {{ max_k }}</span>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">SVD image size</span>
+      <span style="font-size:0.82rem; color:#94a3b8;">{{ width }} × {{ height }} px</span>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+
+    <!-- Left: original -->
+    <div class="stats-panel">
+      <div class="stats-head">Original</div>
+      <dl>
+        <dt>Dimensions</dt>  <dd>{{ width }} × {{ height }} px</dd>
+        <dt>File on disk</dt><dd>{{ original_mb }} MB</dd>
+      </dl>
+    </div>
+
+    <!-- Right: compressed (some values update after the fetch) -->
+    <div class="stats-panel">
+      <div class="stats-head">SVD Compressed — <span id="stat-k-head">k = {{ k }}</span></div>
+      <dl>
+        <dt>Effective rank</dt>     <dd id="stat-rank">{{ k }} of {{ max_k }}</dd>
+        <dt>SVD storage †</dt>      <dd id="stat-svd">{{ svd_mb }} MB</dd>
+        <dt>Output JPEG</dt>        <dd id="stat-jpeg" class="loading">fetching…</dd>
+        <dt>Ratio vs original</dt>  <dd id="stat-ratio" class="loading green">—</dd>
+        <dt>Space saved</dt>        <dd id="stat-saved" class="loading yellow">—</dd>
+      </dl>
+    </div>
+
+  </div>
+
+  <!-- Side-by-side comparison -->
+  <div class="comparison">
+    <div class="img-panel">
+      <span class="panel-label">Original (resized)</span>
+      <img src="/api/original/?image_id={{ meta.id }}" alt="Original">
+    </div>
+    <div class="img-panel">
+      <span class="panel-label">SVD Compressed</span>
+      <div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
+      <img id="comp-img" src="/api/compressed/?image_id={{ meta.id }}&quality={{ quality }}" alt="Compressed">
+    </div>
+  </div>
+
+  <!-- Animation toggle bar -->
+  <div class="anim-toggle-bar">
+    <button class="btn-play" id="btn-open-anim" onclick="openAnim()">▶ Play SVD Build-up</button>
+    <span class="anim-hint">Watch the image rebuild from k = 1 → {{ k }}, singular value by singular value</span>
+  </div>
+
+  <!-- Animation section (hidden until Play is clicked) -->
+  <div class="anim-section" id="anim-section">
+
+    <div class="anim-meta">
+      <div class="anim-stat">
+        <span class="anim-stat-label">Current k</span>
+        <span class="anim-stat-val blue" id="anim-k">—</span>
+      </div>
+      <div class="anim-stat">
+        <span class="anim-stat-label">Target k</span>
+        <span class="anim-stat-val" id="anim-target">—</span>
+      </div>
+      <div class="anim-stat">
+        <span class="anim-stat-label">Frame JPEG size</span>
+        <span class="anim-stat-val" id="anim-size">—</span>
+      </div>
+      <div class="anim-stat">
+        <span class="anim-stat-label">Ratio vs original</span>
+        <span class="anim-stat-val green" id="anim-ratio">—</span>
+      </div>
+      <div class="anim-stat">
+        <span class="anim-stat-label">Step</span>
+        <span class="anim-stat-val" id="anim-step">—</span>
+      </div>
+      <button class="btn-stop" id="btn-stop" onclick="stopAnim()">■ Stop</button>
+      <button class="btn-play" id="btn-replay" style="display:none" onclick="openAnim()">↺ Replay</button>
+    </div>
+
+    <div class="anim-progress-track">
+      <div class="anim-progress-fill" id="anim-fill"></div>
+    </div>
+
+    <div class="anim-display">
+      <img id="anim-img" alt="SVD animation frame">
+    </div>
+
+  </div>
+
+  <p class="note">
+    Reconstruction: <code>U[:, :k] @ diag(S[:k]) @ Vt[:k, :]</code> per channel via
+    <code>numpy.linalg.svd</code>. Images resized to 900 px max before decomposition.<br>
+    † SVD storage = <code>k × (h + w + 1) × 3 channels × 8 bytes</code> (uncompressed float64).
+    Output JPEG is the actual bytes returned by the server.
+  </p>
+
+<script>
+  // ── Constants from Django template ──
+  const imageId   = "{{ meta.id }}";
+  const maxK      = {{ max_k }};
+  const origBytes = {{ original_mb }} * 1048576;
+  const height    = {{ height }};
+  const width     = {{ width }};
+
+  // ── DOM refs ──
+  const slider    = document.getElementById("slider");
+  const qualityNum = document.getElementById("quality-num");
+  const kBadge    = document.getElementById("k-badge");
+  const spinner   = document.getElementById("spinner");
+  const compImg   = document.getElementById("comp-img");
+
+  // Stats refs
+  const statKHead  = document.getElementById("stat-k-head");
+  const statRank   = document.getElementById("stat-rank");
+  const statSvd    = document.getElementById("stat-svd");
+  const statJpeg   = document.getElementById("stat-jpeg");
+  const statRatio  = document.getElementById("stat-ratio");
+  const statSaved  = document.getElementById("stat-saved");
+
+  // ── Helpers ──
+  function qualityToK(q) {
+    return Math.max(1, Math.round(q / 100 * maxK));
+  }
+
+  function estimateSvdBytes(k) {
+    return k * (height + 1 + width) * 3 * 8;
+  }
+
+  function fmt(bytes) {
+    if (bytes < 1024)       return bytes + " B";
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1048576).toFixed(2) + " MB";
+  }
+
+  // ── Main slider logic ──
+  let debounce = null;
+
+  function updateClientStats(quality) {
+    const k = qualityToK(quality);
+    const svdB = estimateSvdBytes(k);
+
+    qualityNum.textContent = quality + "%";
+    kBadge.textContent = `k = ${k} / ${maxK}`;
+    statKHead.textContent = `k = ${k}`;
+    statRank.textContent  = `${k} of ${maxK}`;
+    statSvd.textContent   = fmt(svdB);
+
+    // Mark actual-size cells as pending until new image arrives
+    statJpeg.textContent = "fetching…";
+    statJpeg.className = "loading";
+    statRatio.textContent = "—";
+    statRatio.className = "loading";
+    statSaved.textContent = "—";
+    statSaved.className = "loading";
+
+    const url = new URL(window.location);
+    url.searchParams.set("quality", quality);
+    history.replaceState(null, "", url);
+  }
+
+  function updateActualStats(jpegBytes) {
+    const ratio  = origBytes / jpegBytes;
+    const saved  = origBytes - jpegBytes;
+    const pct    = ((saved / origBytes) * 100).toFixed(1);
+
+    statJpeg.textContent  = fmt(jpegBytes);
+    statJpeg.className    = "";
+    statRatio.textContent = ratio.toFixed(1) + "×";
+    statRatio.className   = "green";
+    statSaved.textContent = fmt(saved) + ` (${pct}% smaller)`;
+    statSaved.className   = "yellow";
+  }
+
+  async function fetchCompressed(quality) {
+    spinner.classList.add("on");
+    const url = `/api/compressed/?image_id=${imageId}&quality=${quality}`;
+    try {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      const objUrl = URL.createObjectURL(blob);
+      await new Promise(res => { compImg.onload = res; compImg.src = objUrl; });
+      updateActualStats(blob.size);
+    } finally {
+      spinner.classList.remove("on");
+    }
+  }
+
+  slider.addEventListener("input", () => {
+    const q = parseInt(slider.value);
+    updateClientStats(q);
+    clearTimeout(debounce);
+    debounce = setTimeout(() => fetchCompressed(q), 300);
+  });
+
+  // Run once on load to populate actual JPEG stats
+  fetchCompressed(parseInt(slider.value));
+
+  // ── Animation ──
+  const animSection  = document.getElementById("anim-section");
+  const animK        = document.getElementById("anim-k");
+  const animTarget   = document.getElementById("anim-target");
+  const animSize     = document.getElementById("anim-size");
+  const animRatio    = document.getElementById("anim-ratio");
+  const animStep     = document.getElementById("anim-step");
+  const animFill     = document.getElementById("anim-fill");
+  const animImg      = document.getElementById("anim-img");
+  const btnOpenAnim  = document.getElementById("btn-open-anim");
+  const btnReplay    = document.getElementById("btn-replay");
+
+  let animRunning = false;
+  let animController = null;
+
+  // Generate logarithmically-spaced steps so early (high-impact) values are denser
+  function logSteps(targetK, count = 18) {
+    const steps = new Set([1]);
+    for (let i = 1; i <= count; i++) {
+      const t = i / count;
+      const k = Math.max(1, Math.round(Math.exp(Math.log(targetK) * t)));
+      steps.add(k);
+    }
+    steps.add(targetK);
+    return [...steps].sort((a, b) => a - b);
+  }
+
+  async function openAnim() {
+    const targetK = qualityToK(parseInt(slider.value));
+    const steps   = logSteps(targetK);
+
+    animSection.classList.add("open");
+    btnOpenAnim.disabled = true;
+    btnOpenAnim.textContent = "⏳ Loading…";
+    btnReplay.style.display = "none";
+
+    animRunning = true;
+    animTarget.textContent = targetK;
+
+    // Kick off all fetches in parallel so server can pipeline them
+    const framePromises = steps.map(k =>
+      fetch(`/api/compressed/?image_id=${imageId}&k=${k}`)
+        .then(r => r.blob())
+        .then(blob => ({ k, blob, size: blob.size, url: URL.createObjectURL(blob) }))
+    );
+
+    for (let i = 0; i < steps.length; i++) {
+      if (!animRunning) break;
+
+      const frame = await framePromises[i];      // wait for this specific frame in order
+
+      animImg.src = frame.url;
+
+      const ratio = origBytes / frame.size;
+      const saved = ((1 - frame.size / origBytes) * 100).toFixed(1);
+      animK.textContent     = frame.k;
+      animSize.textContent  = fmt(frame.size);
+      animRatio.textContent = ratio.toFixed(1) + "× (" + saved + "% smaller)";
+      animStep.textContent  = `${i + 1} / ${steps.length}`;
+      animFill.style.width  = `${(frame.k / targetK * 100).toFixed(1)}%`;
+
+      // Brief pause between frames (server compute time is the main delay anyway)
+      if (i < steps.length - 1) await new Promise(r => setTimeout(r, 250));
+    }
+
+    animRunning = false;
+    btnOpenAnim.disabled = false;
+    btnOpenAnim.textContent = "▶ Play SVD Build-up";
+    btnReplay.style.display = "inline-block";
+  }
+
+  function stopAnim() {
+    animRunning = false;
+    btnOpenAnim.disabled = false;
+    btnOpenAnim.textContent = "▶ Play SVD Build-up";
+    btnReplay.style.display = "inline-block";
+  }
+</script>
+
+</body>
+</html>
